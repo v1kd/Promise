@@ -25,14 +25,14 @@ class Promise<T> {
       promiseResolve = resolve;
     });
 
-    if (this.status === 'RESOLVED') {
-      const newValue = callback(nullthrows(this.valueObj).value);
+    const callbackAfterResolve = (value: T) => {
+      const newValue = callback(value);
       promiseResolve(newValue);
+    }
+
+    if (this.status === 'RESOLVED') {
+      callbackAfterResolve(nullthrows(this.valueObj).value);
     } else {
-      const callbackAfterResolve = (value: T) => {
-        const newValue = callback(value);
-        promiseResolve(newValue);
-      }
       this.resolvedCallbacks.push(callbackAfterResolve);
     }
     return promise;

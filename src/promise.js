@@ -13,15 +13,14 @@ var Promise = /** @class */ (function () {
         var promise = new Promise(function (resolve, reject) {
             promiseResolve = resolve;
         });
-        if (this.status === 'RESOLVED') {
-            var newValue = callback(nullthrows(this.valueObj).value);
+        var callbackAfterResolve = function (value) {
+            var newValue = callback(value);
             promiseResolve(newValue);
+        };
+        if (this.status === 'RESOLVED') {
+            callbackAfterResolve(nullthrows(this.valueObj).value);
         }
         else {
-            var callbackAfterResolve = function (value) {
-                var newValue = callback(value);
-                promiseResolve(newValue);
-            };
             this.resolvedCallbacks.push(callbackAfterResolve);
         }
         return promise;
