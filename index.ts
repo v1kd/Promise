@@ -1,4 +1,4 @@
-import Promise from './src/Promise'
+import Promise from "./src/Promise";
 
 const p1 = new Promise<number>((resolve, reject) => {
   setTimeout(() => {
