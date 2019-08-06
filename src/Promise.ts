@@ -111,6 +111,18 @@ class Promise<T> {
       'Expected promise to be resolved or rejected'
     );
   }
+
+  static reject(error?: any): Promise<any> {
+    return new Promise((_, reject) => {
+      reject(error);
+    });
+  }
+  
+  static resolve<T>(value: T): Promise<T> {
+    return new Promise((resolve) => {
+      resolve(value);
+    })
+  }
 }
 
 function nullthrows<T>(value: T | null | undefined): T {

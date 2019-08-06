@@ -96,6 +96,12 @@ var Promise = /** @class */ (function () {
     Promise.prototype.assertIfResolved = function () {
         invariant(this.status !== 'PENDING', 'Expected promise to be resolved or rejected');
     };
+    Promise.all = function () {
+    };
+    Promise.reject = function () {
+    };
+    Promise.resolve = function () {
+    };
     return Promise;
 }());
 function nullthrows(value) {
