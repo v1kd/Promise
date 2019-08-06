@@ -5,7 +5,12 @@ var Promise = /** @class */ (function () {
         var _this = this;
         this.status = 'PENDING';
         this.callbacks = [];
-        fn(function (value) { return _this.resolve(value); }, function (error) { return _this.reject(error); });
+        try {
+            fn(function (value) { return _this.resolve(value); }, function (error) { return _this.reject(error); });
+        }
+        catch (error) {
+            this.reject(error);
+        }
     }
     Promise.prototype.then = function (callback) {
         var _this = this;
@@ -96,11 +101,15 @@ var Promise = /** @class */ (function () {
     Promise.prototype.assertIfResolved = function () {
         invariant(this.status !== 'PENDING', 'Expected promise to be resolved or rejected');
     };
-    Promise.all = function () {
+    Promise.reject = function (error) {
+        return new Promise(function (_, reject) {
+            reject(error);
+        });
     };
-    Promise.reject = function () {
-    };
-    Promise.resolve = function () {
+    Promise.resolve = function (value) {
+        return new Promise(function (resolve) {
+            resolve(value);
+        });
     };
     return Promise;
 }());

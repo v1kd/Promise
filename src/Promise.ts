@@ -13,10 +13,14 @@ class Promise<T> {
       reject: (error?: any) => void
     ) => void
   ) {
-    fn(
-      (value: T) => this.resolve(value),
-      (error?: any) => this.reject(error)
-    );
+    try {
+      fn(
+        (value: T) => this.resolve(value),
+        (error?: any) => this.reject(error)
+      );
+    } catch (error) {
+      this.reject(error);
+    }
   }
 
   public then<Tnew>(callback: (value: T) => Tnew): Promise<Tnew> {
