@@ -14,16 +14,16 @@ var Promise = /** @class */ (function () {
     }
     Promise.prototype.then = function (callback) {
         var _this = this;
-        var promiseResolve = function () { };
-        var promiseReject = function () { };
+        var promiseResolve;
+        var promiseReject;
         var promise = new Promise(function (resolve, reject) {
             promiseResolve = resolve;
             promiseReject = reject;
         });
         var callbackAfterFinish = function () {
-            _this.assertIfResolved();
+            _this.assertResolved();
             if (_this.status === 'RESOLVED') {
-                var value = nullthrows(_this.valueObj).value;
+                var value = _this.valueObj.value;
                 try {
                     var newValue = callback(value);
                     if (newValue instanceof Promise) {
@@ -38,7 +38,7 @@ var Promise = /** @class */ (function () {
                 }
             }
             else {
-                var value = nullthrows(_this.errorObj).error;
+                var value = _this.errorObj.error;
                 promiseReject(value);
             }
         };
@@ -52,16 +52,16 @@ var Promise = /** @class */ (function () {
     };
     Promise.prototype.catch = function (callback) {
         var _this = this;
-        var promiseResolve = function () { };
-        var promiseReject = function () { };
+        var promiseResolve;
+        var promiseReject;
         var promise = new Promise(function (resolve, reject) {
             promiseResolve = resolve;
             promiseReject = reject;
         });
         var callbackAfterFinish = function () {
-            _this.assertIfResolved();
+            _this.assertResolved();
             if (_this.status === 'REJECTED') {
-                var error = nullthrows(_this.errorObj).error;
+                var error = _this.errorObj.error;
                 try {
                     var newValue = callback(error);
                     if (newValue instanceof Promise) {
@@ -98,7 +98,7 @@ var Promise = /** @class */ (function () {
         this.callbacks.forEach(function (callback) { return callback(); });
         this.callbacks = [];
     };
-    Promise.prototype.assertIfResolved = function () {
+    Promise.prototype.assertResolved = function () {
         invariant(this.status !== 'PENDING', 'Expected promise to be resolved or rejected');
     };
     Promise.reject = function (error) {
@@ -113,12 +113,6 @@ var Promise = /** @class */ (function () {
     };
     return Promise;
 }());
-function nullthrows(value) {
-    if (value == null) {
-        throw Error('Expected no null or undefined');
-    }
-    return value;
-}
 function invariant(truth, msg) {
     if (!truth) {
         throw new Error("Invariant violation: " + msg);

@@ -24,17 +24,17 @@ class Promise<T> {
   }
 
   public then<Tnew>(callback: (value: T) => Tnew): Promise<Tnew> {
-    let promiseResolve: (value: Tnew) => void = () => {};
-    let promiseReject: (error?: any) => void = () => {};
+    let promiseResolve: (value: Tnew) => void;
+    let promiseReject: (error?: any) => void;
     const promise = new Promise<Tnew>((resolve, reject) => {
       promiseResolve = resolve;
       promiseReject = reject;
     });
 
     const callbackAfterFinish = () => {
-      this.assertIfResolved();
+      this.assertResolved();
       if (this.status === 'RESOLVED') {
-        const value = nullthrows(this.valueObj).value;
+        const value = this.valueObj!.value;
         try {
           const newValue = callback(value);
           if (newValue instanceof Promise) {
@@ -46,7 +46,7 @@ class Promise<T> {
           promiseReject(error);
         }
       } else {
-        const value = nullthrows(this.errorObj).error;
+        const value = this.errorObj!.error;
         promiseReject(value);
       }
     }
@@ -60,17 +60,17 @@ class Promise<T> {
   }
 
   public catch<Tnew>(callback: (error?: any) => Tnew): Promise<any> {
-    let promiseResolve: (value: Tnew) => void = () => {};
-    let promiseReject: (error?: any) => void = () => {};
+    let promiseResolve: (value: Tnew) => void;
+    let promiseReject: (error?: any) => void;
     const promise = new Promise<Tnew>((resolve, reject) => {
       promiseResolve = resolve;
       promiseReject = reject; 
     });
 
     const callbackAfterFinish = () => {
-      this.assertIfResolved();
+      this.assertResolved();
       if (this.status === 'REJECTED') {
-        const error = nullthrows(this.errorObj).error;
+        const error = this.errorObj!.error;
         try {
           const newValue = callback(error);
           if (newValue instanceof Promise) {
@@ -109,7 +109,7 @@ class Promise<T> {
     this.callbacks = [];
   }
 
-  private assertIfResolved(): void {
+  private assertResolved(): void {
     invariant(
       this.status !== 'PENDING',
       'Expected promise to be resolved or rejected'
@@ -127,13 +127,6 @@ class Promise<T> {
       resolve(value);
     })
   }
-}
-
-function nullthrows<T>(value: T | null | undefined): T {
-  if (value == null) {
-    throw Error('Expected no null or undefined');
-  }
-  return value;
 }
 
 function invariant(truth: boolean, msg: string) {
