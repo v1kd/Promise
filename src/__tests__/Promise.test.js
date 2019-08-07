@@ -50,3 +50,27 @@ describe('Non async', function () {
         expect(thenMock).not.toBeCalled();
     });
 });
+describe('Non async Promise.all', function () {
+    it('Should await for all promises', function () {
+        var values;
+        Promise_1.default.all([
+            Promise_1.default.resolve(1),
+            Promise_1.default.resolve("resolve"),
+            Promise_1.default.resolve(null),
+            Promise_1.default.resolve(false),
+        ]).then(function (v) { return (values = v); });
+        expect(values).toEqual([1, "resolve", null, false]);
+    });
+    it('Should reject when one of them rejects', function () {
+        var value;
+        Promise_1.default.all([
+            Promise_1.default.resolve(1),
+            Promise_1.default.resolve(2),
+            Promise_1.default.reject(3),
+            Promise_1.default.resolve(4),
+            Promise_1.default.reject(5),
+            Promise_1.default.resolve(6),
+        ]).catch(function (v) { return (value = v); });
+        expect(value).toEqual(3);
+    });
+});

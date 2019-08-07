@@ -22,7 +22,7 @@ var Promise = /** @class */ (function () {
         });
         var callbackAfterFinish = function () {
             _this.assertResolved();
-            if (_this.status === 'RESOLVED') {
+            if (_this.status === 'FULFILLED') {
                 var value = _this.valueObj.value;
                 try {
                     var newValue = callback(value);
@@ -86,7 +86,7 @@ var Promise = /** @class */ (function () {
     };
     Promise.prototype.resolve = function (value) {
         this.valueObj = { value: value };
-        this.status = 'RESOLVED';
+        this.status = 'FULFILLED';
         this.finish();
     };
     Promise.prototype.reject = function (error) {
@@ -109,6 +109,25 @@ var Promise = /** @class */ (function () {
     Promise.resolve = function (value) {
         return new Promise(function (resolve) {
             resolve(value);
+        });
+    };
+    Promise.all = function (promises) {
+        var results = [];
+        var counter = 0;
+        var hasRejected = false;
+        return new Promise(function (resolve, reject) {
+            promises.forEach(function (promise, i) { return promise.then(function (result) {
+                results[i] = result;
+                ++counter;
+                if (counter >= promises.length) {
+                    resolve(results);
+                }
+            }).catch(function (value) {
+                if (!hasRejected) {
+                    hasRejected = true;
+                    reject(value);
+                }
+            }); });
         });
     };
     return Promise;

@@ -60,3 +60,32 @@ describe('Non async', () => {
     expect(thenMock).not.toBeCalled();
   });
 });
+
+describe('Non async Promise.all', () => {
+  it('Should await for all promises', () => {
+    let values;
+    P.all([
+      P.resolve(1),
+      P.resolve("resolve"),
+      P.resolve(null),
+      P.resolve(false),
+    ]).then(v => (values = v));
+
+    expect(values).toEqual([1, "resolve", null, false]);
+  });
+
+  it('Should reject when one of them rejects', () => {
+    let value;
+
+    P.all([
+      P.resolve(1),
+      P.resolve(2),
+      P.reject(3),
+      P.resolve(4),
+      P.reject(5),
+      P.resolve(6),
+    ]).catch(v => (value = v));
+
+    expect(value).toEqual(3);
+  });
+});

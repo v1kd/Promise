@@ -1,9 +1,9 @@
 class Promise<T> {
 
-  private status: 'PENDING' | 'RESOLVED' | 'REJECTED' = 'PENDING';
+  private status: 'PENDING' | 'FULFILLED' | 'REJECTED' = 'PENDING';
 
-  private valueObj?: {value: T};
-  private errorObj?: {error?: any};
+  private valueObj?: { value: T };
+  private errorObj?: { error?: any };
 
   private callbacks: Array<() => void> = [];
 
@@ -33,7 +33,7 @@ class Promise<T> {
 
     const callbackAfterFinish = () => {
       this.assertResolved();
-      if (this.status === 'RESOLVED') {
+      if (this.status === 'FULFILLED') {
         const value = this.valueObj!.value;
         try {
           const newValue = callback(value);
@@ -64,7 +64,7 @@ class Promise<T> {
     let promiseReject: (error?: any) => void;
     const promise = new Promise<Tnew>((resolve, reject) => {
       promiseResolve = resolve;
-      promiseReject = reject; 
+      promiseReject = reject;
     });
 
     const callbackAfterFinish = () => {
@@ -78,7 +78,7 @@ class Promise<T> {
           } else {
             promiseResolve(newValue);
           }
-        } catch(error) {
+        } catch (error) {
           promiseReject(error);
         }
       }
@@ -93,13 +93,13 @@ class Promise<T> {
   }
 
   private resolve(value: T): void {
-    this.valueObj = {value};
-    this.status = 'RESOLVED';
+    this.valueObj = { value };
+    this.status = 'FULFILLED';
     this.finish();
   }
 
   private reject(error?: any): void {
-    this.errorObj = {error};
+    this.errorObj = { error };
     this.status = 'REJECTED';
     this.finish();
   }
@@ -121,12 +121,36 @@ class Promise<T> {
       reject(error);
     });
   }
-  
+
   static resolve<T>(value: T): Promise<T> {
     return new Promise((resolve) => {
       resolve(value);
     })
   }
+
+  static all<T extends readonly any[]>(promises: Promisify<T>): Promise<T> {
+    const results: any[] = [];
+    let counter = 0;
+    let hasRejected = false;
+    return new Promise((resolve, reject) => {
+      promises.forEach((promise, i) => promise.then(result => {
+        results[i] = result;
+        ++counter;
+        if (counter >= promises.length) {
+          resolve(results as unknown as T);
+        }
+      }).catch(value => {
+        if (!hasRejected) {
+          hasRejected = true;
+          reject(value);
+        }
+      }))
+    });
+  }
+}
+
+type Promisify<T extends readonly any[]> = {
+  [K in keyof T]: Promise<T[K]>
 }
 
 function invariant(truth: boolean, msg: string) {
