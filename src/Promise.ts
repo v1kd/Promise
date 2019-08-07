@@ -2,8 +2,8 @@ class Promise<T> {
 
   private status: 'PENDING' | 'FULFILLED' | 'REJECTED' = 'PENDING';
 
-  private valueObj?: { value: T };
-  private errorObj?: { error?: any };
+  private value?: T;
+  private error?: any;
 
   private callbacks: Array<() => void> = [];
 
@@ -34,7 +34,7 @@ class Promise<T> {
     const callbackAfterFinish = () => {
       this.assertResolved();
       if (this.status === 'FULFILLED') {
-        const value = this.valueObj!.value;
+        const value = this.value!;
         try {
           const newValue = callback(value);
           if (newValue instanceof Promise) {
@@ -46,7 +46,7 @@ class Promise<T> {
           promiseReject(error);
         }
       } else {
-        const value = this.errorObj!.error;
+        const value = this.error;
         promiseReject(value);
       }
     }
@@ -70,7 +70,7 @@ class Promise<T> {
     const callbackAfterFinish = () => {
       this.assertResolved();
       if (this.status === 'REJECTED') {
-        const error = this.errorObj!.error;
+        const error = this.error;
         try {
           const newValue = callback(error);
           if (newValue instanceof Promise) {
@@ -93,13 +93,13 @@ class Promise<T> {
   }
 
   private resolve(value: T): void {
-    this.valueObj = { value };
+    this.value = value;
     this.status = 'FULFILLED';
     this.finish();
   }
 
   private reject(error?: any): void {
-    this.errorObj = { error };
+    this.error = error;
     this.status = 'REJECTED';
     this.finish();
   }

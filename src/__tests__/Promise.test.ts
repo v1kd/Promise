@@ -80,7 +80,7 @@ describe('Non async Promise.all', () => {
     P.all([
       P.resolve(1),
       P.resolve(2),
-      P.reject(3),
+      P.reject(3), // first rejected value
       P.resolve(4),
       P.reject(5),
       P.resolve(6),
