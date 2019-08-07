@@ -29,10 +29,10 @@ class Promise<T> {
     }
   }
 
-  public then<Tnew>(callback: (value: T) => Tnew): Promise<Tnew> {
-    let promiseResolve: (value: Tnew) => void;
+  public then<R>(callback: (value: T) => R): Promise<R> {
+    let promiseResolve: (value: R) => void;
     let promiseReject: (error?: any) => void;
-    const promise = new Promise<Tnew>((resolve, reject) => {
+    const promise = new Promise<R>((resolve, reject) => {
       promiseResolve = resolve;
       promiseReject = reject;
     });
