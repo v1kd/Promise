@@ -11,6 +11,15 @@ describe('Non async', () => {
     expect(a).toEqual(1);
   });
 
+  it('Should resolve undefined', () => {
+    let a = null;
+
+    new P<undefined>(resolve => resolve(undefined))
+      .then(value => (a = value));
+    
+    expect(a).toEqual(undefined);
+  });
+
   it('Should await for multiple thens', () => {
     let a: number = 0;
 

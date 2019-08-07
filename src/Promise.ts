@@ -30,72 +30,70 @@ class Promise<T> {
   }
 
   public then<R>(callback: (value: T) => R): Promise<R> {
-    let promiseResolve: (value: R) => void;
-    let promiseReject: (error?: any) => void;
-    const promise = new Promise<R>((resolve, reject) => {
-      promiseResolve = resolve;
-      promiseReject = reject;
-    });
-
-    const callbackAfterFinish = () => {
-      this.assertResolved();
-      if (this.status === Status.FULFILLED) {
-        const value = this.value!;
-        try {
-          const newValue = callback(value);
-          if (newValue instanceof Promise) {
-            newValue.then((v) => promiseResolve(v));
-          } else {
-            promiseResolve(newValue);
+    const promiseFn = (
+      resolve: (value: R) => void,
+      reject: (error?: any) => void
+    ) => {
+      const callbackAfterFinish = () => {
+        this.assertResolved();
+        if (this.status === Status.FULFILLED) {
+          const value = this.value!;
+          try {
+            const newValue = callback(value);
+            if (newValue instanceof Promise) {
+              newValue.then((v) => resolve(v));
+            } else {
+              resolve(newValue);
+            }
+          } catch (error) {
+            reject(error);
           }
-        } catch (error) {
-          promiseReject(error);
+        } else {
+          const value = this.error;
+          reject(value);
         }
+      }
+
+      if (this.status !== Status.PENDING) {
+        callbackAfterFinish();
       } else {
-        const value = this.error;
-        promiseReject(value);
+        this.callbacks.push(callbackAfterFinish);
       }
     }
 
-    if (this.status !== Status.PENDING) {
-      callbackAfterFinish();
-    } else {
-      this.callbacks.push(callbackAfterFinish);
-    }
-    return promise;
+    return new Promise<R>(promiseFn);
   }
 
-  public catch<Tnew>(callback: (error?: any) => Tnew): Promise<any> {
-    let promiseResolve: (value: Tnew) => void;
-    let promiseReject: (error?: any) => void;
-    const promise = new Promise<Tnew>((resolve, reject) => {
-      promiseResolve = resolve;
-      promiseReject = reject;
-    });
-
-    const callbackAfterFinish = () => {
-      this.assertResolved();
-      if (this.status === Status.REJECTED) {
-        const error = this.error;
-        try {
-          const newValue = callback(error);
-          if (newValue instanceof Promise) {
-            newValue.then((v) => promiseResolve(v));
-          } else {
-            promiseResolve(newValue);
+  public catch<R>(callback: (error?: any) => R): Promise<any> {
+    const promiseFn = (
+      resolve: (value: R) => void,
+      reject: (error?: any) => void
+    ) => {
+      const callbackAfterFinish = () => {
+        this.assertResolved();
+        if (this.status === Status.REJECTED) {
+          const error = this.error;
+          try {
+            const newValue = callback(error);
+            if (newValue instanceof Promise) {
+              newValue.then((v) => resolve(v));
+            } else {
+              resolve(newValue);
+            }
+          } catch (error) {
+            reject(error);
           }
-        } catch (error) {
-          promiseReject(error);
         }
+      }
+
+      if (this.status !== Status.PENDING) {
+        callbackAfterFinish();
+      } else {
+        this.callbacks.push(callbackAfterFinish);
       }
     }
 
-    if (this.status !== Status.PENDING) {
-      callbackAfterFinish();
-    } else {
-      this.callbacks.push(callbackAfterFinish);
-    }
-    return promise;
+    return new Promise<R>(promiseFn);
   }
 
   private resolve(value: T): void {
