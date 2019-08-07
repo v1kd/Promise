@@ -98,3 +98,29 @@ describe('Non async Promise.all', () => {
     expect(value).toEqual(3);
   });
 });
+
+describe('Non async Promise.race', () => {
+  it('Should await first resolved promise', () => {
+    let value;
+
+    P.race([
+      P.resolve(1),
+      P.resolve(2),
+      P.reject(3),
+    ]).then(v => (value = v));
+
+    expect(value).toEqual(1);
+  });
+
+  it('Should reject first resolved promise', () => {
+    let value;
+
+    P.race([
+      P.reject(1),
+      P.resolve(2),
+      P.reject(3),
+    ]).catch(v => (value = v));
+
+    expect(value).toEqual(1);
+  });
+});

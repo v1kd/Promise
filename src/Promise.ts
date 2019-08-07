@@ -132,23 +132,46 @@ class Promise<T> {
     })
   }
 
-  static all<T extends readonly any[]>(promises: Promisify<T>): Promise<T> {
+  static all<T extends readonly any[]>(
+    promises: Promisify<T>
+  ): Promise<T> {
     const results: any[] = [];
     let counter = 0;
     let hasRejected = false;
     return new Promise((resolve, reject) => {
-      promises.forEach((promise, i) => promise.then(result => {
-        results[i] = result;
-        ++counter;
-        if (counter >= promises.length) {
-          resolve(results as unknown as T);
-        }
-      }).catch(value => {
-        if (!hasRejected) {
-          hasRejected = true;
-          reject(value);
-        }
-      }))
+      promises.forEach((promise, i) => {
+        promise.then(result => {
+          results[i] = result;
+          ++counter;
+          if (counter >= promises.length) {
+            resolve(results as unknown as T);
+          }
+        }).catch(value => {
+          if (!hasRejected) {
+            hasRejected = true;
+            reject(value);
+          }
+        });
+      })
+    });
+  }
+
+  static race<T extends readonly any[]>(
+    promises: Promisify<T>
+  ): Promise<ArrayElement<T>> {
+    let isDone = false;
+    return new Promise((resolve, reject) => {
+      promises.forEach((promise, i) => promise
+        .then(value => {
+          if (isDone) return;
+          isDone = true;
+          resolve(value);
+        })
+        .catch((error) => {
+          if (isDone) return;
+          isDone = true;
+          reject(error);
+        }))
     });
   }
 }
@@ -156,6 +179,8 @@ class Promise<T> {
 type Promisify<T extends readonly any[]> = {
   [K in keyof T]: Promise<T[K]>
 }
+
+type ArrayElement<T extends readonly any[]> = T[number];
 
 function invariant(truth: boolean, msg: string) {
   if (!truth) {

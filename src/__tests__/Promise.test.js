@@ -12,6 +12,12 @@ describe('Non async', function () {
         }).then(function (value) { return (a = value); });
         expect(a).toEqual(1);
     });
+    it('Should resolve undefined', function () {
+        var a = null;
+        new Promise_1.default(function (resolve) { return resolve(undefined); })
+            .then(function (value) { return (a = value); });
+        expect(a).toEqual(undefined);
+    });
     it('Should await for multiple thens', function () {
         var a = 0;
         new Promise_1.default(function (resolve) {
@@ -72,5 +78,25 @@ describe('Non async Promise.all', function () {
             Promise_1.default.resolve(6),
         ]).catch(function (v) { return (value = v); });
         expect(value).toEqual(3);
+    });
+});
+describe('Non async Promise.race', function () {
+    it('Should await first resolved promise', function () {
+        var value;
+        Promise_1.default.race([
+            Promise_1.default.resolve(1),
+            Promise_1.default.resolve(2),
+            Promise_1.default.reject(3),
+        ]).then(function (v) { return (value = v); });
+        expect(value).toEqual(1);
+    });
+    it('Should reject first resolved promise', function () {
+        var value;
+        Promise_1.default.race([
+            Promise_1.default.reject(1),
+            Promise_1.default.resolve(2),
+            Promise_1.default.reject(3),
+        ]).catch(function (v) { return (value = v); });
+        expect(value).toEqual(1);
     });
 });

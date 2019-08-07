@@ -1,9 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+var Status;
+(function (Status) {
+    Status[Status["PENDING"] = 0] = "PENDING";
+    Status[Status["FULFILLED"] = 1] = "FULFILLED";
+    Status[Status["REJECTED"] = -1] = "REJECTED";
+})(Status || (Status = {}));
 var Promise = /** @class */ (function () {
     function Promise(fn) {
         var _this = this;
-        this.status = 'PENDING';
+        this.status = Status.PENDING;
         this.callbacks = [];
         try {
             fn(function (value) { return _this.resolve(value); }, function (error) { return _this.reject(error); });
@@ -14,84 +20,76 @@ var Promise = /** @class */ (function () {
     }
     Promise.prototype.then = function (callback) {
         var _this = this;
-        var promiseResolve;
-        var promiseReject;
-        var promise = new Promise(function (resolve, reject) {
-            promiseResolve = resolve;
-            promiseReject = reject;
-        });
-        var callbackAfterFinish = function () {
-            _this.assertResolved();
-            if (_this.status === 'FULFILLED') {
-                var value = _this.valueObj.value;
-                try {
-                    var newValue = callback(value);
-                    if (newValue instanceof Promise) {
-                        newValue.then(function (v) { return promiseResolve(v); });
+        var promiseFn = function (resolve, reject) {
+            var callbackAfterFinish = function () {
+                _this.assertResolved();
+                if (_this.status === Status.FULFILLED) {
+                    var value = _this.value;
+                    try {
+                        var newValue = callback(value);
+                        if (newValue instanceof Promise) {
+                            newValue.then(function (v) { return resolve(v); });
+                        }
+                        else {
+                            resolve(newValue);
+                        }
                     }
-                    else {
-                        promiseResolve(newValue);
+                    catch (error) {
+                        reject(error);
                     }
                 }
-                catch (error) {
-                    promiseReject(error);
+                else {
+                    var value = _this.error;
+                    reject(value);
                 }
+            };
+            if (_this.status !== Status.PENDING) {
+                callbackAfterFinish();
             }
             else {
-                var value = _this.errorObj.error;
-                promiseReject(value);
+                _this.callbacks.push(callbackAfterFinish);
             }
         };
-        if (this.status !== 'PENDING') {
-            callbackAfterFinish();
-        }
-        else {
-            this.callbacks.push(callbackAfterFinish);
-        }
-        return promise;
+        return new Promise(promiseFn);
     };
     Promise.prototype.catch = function (callback) {
         var _this = this;
-        var promiseResolve;
-        var promiseReject;
-        var promise = new Promise(function (resolve, reject) {
-            promiseResolve = resolve;
-            promiseReject = reject;
-        });
-        var callbackAfterFinish = function () {
-            _this.assertResolved();
-            if (_this.status === 'REJECTED') {
-                var error = _this.errorObj.error;
-                try {
-                    var newValue = callback(error);
-                    if (newValue instanceof Promise) {
-                        newValue.then(function (v) { return promiseResolve(v); });
+        var promiseFn = function (resolve, reject) {
+            var callbackAfterFinish = function () {
+                _this.assertResolved();
+                if (_this.status === Status.REJECTED) {
+                    var error = _this.error;
+                    try {
+                        var newValue = callback(error);
+                        if (newValue instanceof Promise) {
+                            newValue.then(function (v) { return resolve(v); });
+                        }
+                        else {
+                            resolve(newValue);
+                        }
                     }
-                    else {
-                        promiseResolve(newValue);
+                    catch (error) {
+                        reject(error);
                     }
                 }
-                catch (error) {
-                    promiseReject(error);
-                }
+            };
+            if (_this.status !== Status.PENDING) {
+                callbackAfterFinish();
+            }
+            else {
+                _this.callbacks.push(callbackAfterFinish);
             }
         };
-        if (this.status !== 'PENDING') {
-            callbackAfterFinish();
-        }
-        else {
-            this.callbacks.push(callbackAfterFinish);
-        }
-        return promise;
+        return new Promise(promiseFn);
     };
     Promise.prototype.resolve = function (value) {
-        this.valueObj = { value: value };
-        this.status = 'FULFILLED';
+        this.value = value;
+        this.status = Status.FULFILLED;
         this.finish();
     };
     Promise.prototype.reject = function (error) {
-        this.errorObj = { error: error };
-        this.status = 'REJECTED';
+        this.error = error;
+        this.status = Status.REJECTED;
         this.finish();
     };
     Promise.prototype.finish = function () {
@@ -99,7 +97,7 @@ var Promise = /** @class */ (function () {
         this.callbacks = [];
     };
     Promise.prototype.assertResolved = function () {
-        invariant(this.status !== 'PENDING', 'Expected promise to be resolved or rejected');
+        invariant(this.status !== Status.PENDING, 'Expected promise to be resolved or rejected');
     };
     Promise.reject = function (error) {
         return new Promise(function (_, reject) {
@@ -116,17 +114,37 @@ var Promise = /** @class */ (function () {
         var counter = 0;
         var hasRejected = false;
         return new Promise(function (resolve, reject) {
-            promises.forEach(function (promise, i) { return promise.then(function (result) {
-                results[i] = result;
-                ++counter;
-                if (counter >= promises.length) {
-                    resolve(results);
-                }
-            }).catch(function (value) {
-                if (!hasRejected) {
-                    hasRejected = true;
-                    reject(value);
-                }
+            promises.forEach(function (promise, i) {
+                promise.then(function (result) {
+                    results[i] = result;
+                    ++counter;
+                    if (counter >= promises.length) {
+                        resolve(results);
+                    }
+                }).catch(function (value) {
+                    if (!hasRejected) {
+                        hasRejected = true;
+                        reject(value);
+                    }
+                });
+            });
+        });
+    };
+    Promise.race = function (promises) {
+        var isDone = false;
+        return new Promise(function (resolve, reject) {
+            promises.forEach(function (promise, i) { return promise
+                .then(function (value) {
+                if (isDone)
+                    return;
+                isDone = true;
+                resolve(value);
+            })
+                .catch(function (error) {
+                if (isDone)
+                    return;
+                isDone = true;
+                reject(error);
             }); });
         });
     };
