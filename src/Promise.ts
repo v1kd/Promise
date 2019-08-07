@@ -1,6 +1,12 @@
+enum Status {
+  PENDING = 0,
+  FULFILLED = 1,
+  REJECTED = -1,
+}
+
 class Promise<T> {
 
-  private status: 'PENDING' | 'FULFILLED' | 'REJECTED' = 'PENDING';
+  private status: Status = Status.PENDING;
 
   private value?: T;
   private error?: any;
@@ -33,7 +39,7 @@ class Promise<T> {
 
     const callbackAfterFinish = () => {
       this.assertResolved();
-      if (this.status === 'FULFILLED') {
+      if (this.status === Status.FULFILLED) {
         const value = this.value!;
         try {
           const newValue = callback(value);
@@ -51,7 +57,7 @@ class Promise<T> {
       }
     }
 
-    if (this.status !== 'PENDING') {
+    if (this.status !== Status.PENDING) {
       callbackAfterFinish();
     } else {
       this.callbacks.push(callbackAfterFinish);
@@ -69,7 +75,7 @@ class Promise<T> {
 
     const callbackAfterFinish = () => {
       this.assertResolved();
-      if (this.status === 'REJECTED') {
+      if (this.status === Status.REJECTED) {
         const error = this.error;
         try {
           const newValue = callback(error);
@@ -84,7 +90,7 @@ class Promise<T> {
       }
     }
 
-    if (this.status !== 'PENDING') {
+    if (this.status !== Status.PENDING) {
       callbackAfterFinish();
     } else {
       this.callbacks.push(callbackAfterFinish);
@@ -94,13 +100,13 @@ class Promise<T> {
 
   private resolve(value: T): void {
     this.value = value;
-    this.status = 'FULFILLED';
+    this.status = Status.FULFILLED;
     this.finish();
   }
 
   private reject(error?: any): void {
     this.error = error;
-    this.status = 'REJECTED';
+    this.status = Status.REJECTED;
     this.finish();
   }
 
@@ -111,7 +117,7 @@ class Promise<T> {
 
   private assertResolved(): void {
     invariant(
-      this.status !== 'PENDING',
+      this.status !== Status.PENDING,
       'Expected promise to be resolved or rejected'
     );
   }
