@@ -160,7 +160,7 @@ class Promise<T> {
   ): Promise<ArrayElement<T>> {
     let isDone = false;
     return new Promise((resolve, reject) => {
-      promises.forEach((promise, i) => promise
+      promises.forEach((promise) => promise
         .then(value => {
           if (isDone) return;
           isDone = true;
