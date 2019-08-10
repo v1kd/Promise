@@ -114,10 +114,9 @@ class Promise<T> {
   }
 
   private assertResolved(): void {
-    invariant(
-      this.status !== Status.PENDING,
-      'Expected promise to be resolved or rejected'
-    );
+    if (this.status !== Status.PENDING) {
+      throw new Error('Expected promise to be resolved or rejected');
+    }
   }
 
   static reject(error?: any): Promise<any> {
@@ -179,13 +178,6 @@ class Promise<T> {
 type Promisify<T extends readonly any[]> = {
   [K in keyof T]: Promise<T[K]>
 }
-
 type ArrayElement<T extends readonly any[]> = T[number];
-
-function invariant(truth: boolean, msg: string) {
-  if (!truth) {
-    throw new Error(`Invariant violation: ${msg}`);
-  }
-}
 
 export default Promise;

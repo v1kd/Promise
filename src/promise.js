@@ -97,7 +97,9 @@ var Promise = /** @class */ (function () {
         this.callbacks = [];
     };
     Promise.prototype.assertResolved = function () {
-        invariant(this.status !== Status.PENDING, 'Expected promise to be resolved or rejected');
+        if (this.status !== Status.PENDING) {
+            throw new Error('Expected promise to be resolved or rejected');
+        }
     };
     Promise.reject = function (error) {
         return new Promise(function (_, reject) {
@@ -150,9 +152,4 @@ var Promise = /** @class */ (function () {
     };
     return Promise;
 }());
-function invariant(truth, msg) {
-    if (!truth) {
-        throw new Error("Invariant violation: " + msg);
-    }
-}
 exports.default = Promise;
